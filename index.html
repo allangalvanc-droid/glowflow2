@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlowFlow - Tu Rutina de Skincare Personalizada</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sage: {
+                            50: '#f4f7f5',
+                            100: '#e5ebe6',
+                            200: '#cbdad0',
+                            300: '#a3beb0',
+                            400: '#769c8a',
+                            500: '#58816f',
+                            600: '#436656',
+                            700: '#375246',
+                        },
+                        rosewood: {
+                            50: '#fbf7f6',
+                            100: '#f6eeeb',
+                            200: '#ebd9d3',
+                            300: '#dbbeb4',
+                            400: '#c59a8d',
+                            500: '#b17b6c',
+                        },
+                        skin: {
+                            warm: '#faf6f0',
+                            cream: '#fcfbf7',
+                            clay: '#e6dfd5'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Smooth Custom Transitions */
+        .tab-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #faf6f0;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col">
+
+    <!-- Navigation / Top Header -->
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-sage-100 shadow-sm transition-all duration-300">
+        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="w-9 h-9 bg-sage-500 rounded-full flex items-center justify-center text-white shadow-md">
+                    <i class="fa-solid fa-sparkles text-sm"></i>
+                </div>
+                <div>
+                    <span class="font-serif text-xl font-bold tracking-tight text-sage-700">GlowFlow</span>
+                    <p class="text-[10px] text-stone-400 font-medium uppercase tracking-wider">Tu diario de skincare</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="btn-streak" class="flex items-center space-x-1.5 bg-rosewood-100 text-rosewood-500 px-3 py-1 rounded-full text-xs font-semibold border border-rosewood-200">
+                    <i class="fa-solid fa-fire animate-pulse text-amber-500"></i>
+                    <span id="streak-counter">0 días</span>
+                </button>
+                <!-- NEW: Settings Button to open visual routine editor -->
+                <button onclick="openEditorModal()" class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center transition-all" title="Personalizar Pasos">
+                    <i class="fa-solid fa-gear text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main App Container -->
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-4 pb-24">
+        
+        <!-- Date Selector Dashboard -->
+        <section class="mb-5 bg-white rounded-3xl p-4 shadow-sm border border-stone-100">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-xs font-semibold text-stone-400 uppercase tracking-widest">Fecha actual</h2>
+                    <h1 id="selected-date-title" class="text-lg font-bold text-stone-800">Cargando fecha...</h1>
+                </div>
+                <div class="bg-sage-50 text-sage-600 px-3 py-1 rounded-full text-xs font-semibold" id="day-type-badge">
+                    Cargando...
+                </div>
+            </div>
+
+            <!-- Horizontal Week Slider -->
+            <div class="flex justify-between overflow-x-auto gap-2 py-1 hide-scrollbar">
+                <!-- Days will be injected dynamically -->
+                <div id="week-days-container" class="flex w-full justify-between"></div>
+            </div>
+        </section>
+
+        <!-- Daily Progress Wheel -->
+        <section class="mb-5 bg-gradient-to-br from-sage-50 to-skin-warm rounded-3xl p-5 border border-sage-100 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-sage-800 text-md">Progreso de hoy</h3>
+                    <p class="text-xs text-stone-500 mt-1">Completa tus pasos para cuidar tu barrera cutánea.</p>
+                </div>
+                <div class="relative flex items-center justify-center">
+                    <svg class="w-16 h-16 transform -rotate-90">
+                        <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="5" class="text-sage-100" fill="transparent" />
+                        <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="5" class="text-sage-500 transition-all duration-500" stroke-dasharray="175" id="progress-circle-bar" fill="transparent" />
+                    </svg>
+                    <span class="absolute text-xs font-bold text-sage-700" id="progress-percentage">0%</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-sage-100/60 text-center">
+                <div class="bg-white/60 rounded-xl p-2">
+                    <span class="block text-xs text-stone-400">Pendiente</span>
+                    <span id="stats-pending" class="text-sm font-bold text-stone-600">0</span>
+                </div>
+                <div class="bg-emerald-50/60 rounded-xl p-2">
+                    <span class="block text-xs text-emerald-600 font-medium">Realizados</span>
+                    <span id="stats-completed" class="text-sm font-bold text-emerald-700">0</span>
+                </div>
+                <div class="bg-amber-50/60 rounded-xl p-2">
+                    <span class="block text-xs text-amber-600 font-medium">Suspendidos</span>
+                    <span id="stats-skipped" class="text-sm font-bold text-amber-700">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- AM/PM Toggle Tabs -->
+        <div class="flex bg-white p-1.5 rounded-2xl mb-5 shadow-sm border border-stone-100">
+            <button id="tab-am" onclick="switchRoutinePeriod('AM')" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-center flex items-center justify-center space-x-2 tab-transition bg-sage-500 text-white shadow-sm">
+                <i class="fa-solid fa-sun-cloud text-base text-amber-300"></i>
+                <span>Rutina de Mañana (AM)</span>
+            </button>
+            <button id="tab-pm" onclick="switchRoutinePeriod('PM')" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-center flex items-center justify-center space-x-2 tab-transition text-stone-500 hover:text-stone-800">
+                <i class="fa-solid fa-moon text-base text-indigo-400"></i>
+                <span>Rutina de Noche (PM)</span>
+            </button>
+        </div>
+
+        <!-- Routine Steps Container -->
+        <div class="space-y-4" id="steps-container">
+            <!-- Dynamic steps list injected here -->
+        </div>
+
+        <!-- Skin Diary & Notes -->
+        <section class="mt-8 bg-white rounded-3xl p-5 shadow-sm border border-stone-100">
+            <div class="flex items-center space-x-2 mb-3">
+                <div class="w-8 h-8 rounded-full bg-rosewood-100 flex items-center justify-center text-rosewood-500">
+                    <i class="fa-solid fa-face-smile text-sm"></i>
+                </div>
+                <h3 class="font-bold text-stone-800">Diario de mi Piel</h3>
+            </div>
+            <p class="text-xs text-stone-500 mb-4">¿Cómo se siente tu piel el día de hoy? Registra observaciones de sequedad, sensibilidad o brotes.</p>
+            
+            <!-- Quick mood selectors -->
+            <div class="flex justify-between gap-1 mb-4">
+                <button onclick="setSkinMood('perfect')" class="mood-btn flex-1 flex flex-col items-center p-2 rounded-2xl border border-stone-100 hover:bg-sage-50/50 transition-all">
+                    <span class="text-xl">✨</span>
+                    <span class="text-[10px] text-stone-500 mt-1 font-medium">Perfecta</span>
+                </button>
+                <button onclick="setSkinMood('dry')" class="mood-btn flex-1 flex flex-col items-center p-2 rounded-2xl border border-stone-100 hover:bg-sage-50/50 transition-all">
+                    <span class="text-xl">🌵</span>
+                    <span class="text-[10px] text-stone-500 mt-1 font-medium">Seca</span>
+                </button>
+                <button onclick="setSkinMood('sensitive')" class="mood-btn flex-1 flex flex-col items-center p-2 rounded-2xl border border-stone-100 hover:bg-sage-50/50 transition-all">
+                    <span class="text-xl">🥵</span>
+                    <span class="text-[10px] text-stone-500 mt-1 font-medium">Sensible</span>
+                </button>
+                <button onclick="setSkinMood('breakout')" class="mood-btn flex-1 flex flex-col items-center p-2 rounded-2xl border border-stone-100 hover:bg-sage-50/50 transition-all">
+                    <span class="text-xl">🌋</span>
+                    <span class="text-[10px] text-stone-500 mt-1 font-medium">Brote</span>
+                </button>
+            </div>
+
+            <textarea id="skin-note-input" rows="3" placeholder="Ej: Hoy noto los poros más limpios. Un poco de rojez en las mejillas..." class="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-transparent resize-none transition-all"></textarea>
+            
+            <button onclick="saveDailyNote()" class="mt-3 w-full bg-sage-600 hover:bg-sage-700 text-white font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Guardar notas del día</span>
+            </button>
+        </section>
+
+        <!-- Product Catalog Section -->
+        <section class="mt-8 bg-stone-100 rounded-3xl p-5 border border-stone-200/60">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-sage-200 flex items-center justify-center text-sage-700">
+                        <i class="fa-solid fa-prescription-bottle-medical"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-stone-800">Mi Tocador de Productos</h3>
+                        <p class="text-[10px] text-stone-400 font-semibold tracking-wider uppercase">Glosario y Guía</p>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-3" id="catalog-container">
+                <!-- Products will be dynamically populated here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- App Bottom Footer/Info -->
+    <footer class="bg-stone-950 text-stone-400 text-center py-6 text-xs px-4 mt-auto">
+        <p class="font-serif italic text-stone-300 text-sm mb-1">"La constancia es el mejor ingrediente para una piel sana."</p>
+        <p>© 2026 GlowFlow. Organizado para la protección y el equilibrio natural de tu piel.</p>
+    </footer>
+
+    <!-- NEW: Visual Routine Editor Modal -->
+    <div id="editor-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center opacity-0 pointer-events-none transition-all duration-300 p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden transform translate-y-10 transition-all duration-300" id="editor-modal-container">
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-stone-100 flex items-center justify-between bg-stone-50">
+                <div>
+                    <h3 class="font-bold text-stone-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-sage-600"></i>
+                        <span>Personalizar Rutinas</span>
+                    </h3>
+                    <p class="text-[10px] text-stone-400 font-semibold uppercase tracking-wider">Modifica, agrega o remueve pasos</p>
+                </div>
+                <button onclick="closeEditorModal()" class="w-8 h-8 rounded-full bg-stone-200/60 hover:bg-stone-200 text-stone-600 flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Selection Toggles -->
+            <div class="p-4 bg-stone-50 border-b border-stone-100 space-y-3">
+                <!-- Day Type Selection -->
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1.5">1. Selecciona Tipo de Día</label>
+                    <div class="grid grid-cols-3 gap-1.5 bg-white p-1 rounded-xl border border-stone-200/60">
+                        <button onclick="setEditorDayType('treatment')" id="edit-day-treatment" class="py-1.5 text-xs font-bold rounded-lg text-center transition-all bg-sage-500 text-white shadow-sm">Tratamiento</button>
+                        <button onclick="setEditorDayType('recovery')" id="edit-day-recovery" class="py-1.5 text-xs font-bold rounded-lg text-center text-stone-600 transition-all">Recuperación</button>
+                        <button onclick="setEditorDayType('reset')" id="edit-day-reset" class="py-1.5 text-xs font-bold rounded-lg text-center text-stone-600 transition-all">Reset</button>
+                    </div>
+                </div>
+
+                <!-- AM / PM selection inside editor -->
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1.5">2. Selecciona Momento</label>
+                    <div class="flex bg-white p-1 rounded-xl border border-stone-200/60">
+                        <button onclick="setEditorPeriod('AM')" id="edit-period-am" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-center transition-all bg-stone-800 text-white shadow-sm flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-sun text-[10px] text-amber-400"></i> Mañana (AM)
+                        </button>
+                        <button onclick="setEditorPeriod('PM')" id="edit-period-pm" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-center text-stone-600 transition-all flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-moon text-[10px] text-indigo-400"></i> Noche (PM)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Steps List for editing -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3" id="editor-steps-list">
+                <!-- Dynamic inputs will be injected here -->
+            </div>
+
+            <!-- Footer Tools -->
+            <div class="p-4 border-t border-stone-100 bg-stone-50 space-y-2">
+                <button onclick="addNewEditorStep()" class="w-full bg-stone-200/80 hover:bg-stone-200 text-stone-700 font-bold text-xs py-2.5 px-4 rounded-xl transition-all flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                    <span>Añadir un Nuevo Paso</span>
+                </button>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="resetRoutinesToDefault()" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs py-2.5 px-4 rounded-xl transition-all border border-red-200/40">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Reiniciar Base
+                    </button>
+                    <button onclick="saveAndApplyCustomRoutines()" class="bg-sage-600 hover:bg-sage-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm">
+                        <i class="fa-solid fa-check mr-1"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Elegant Notification Alert Toast -->
+    <div id="toast-message" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-xs px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-3 opacity-0 pointer-events-none transition-all duration-300 z-50 min-w-[280px]">
+        <div id="toast-icon" class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs"></div>
+        <p id="toast-text" class="font-medium text-stone-100 flex-1"></p>
+    </div>
+
+    <script>
+        // Define original/fallback routines structure precisely as given by the user
+        const INITIAL_ROUTINE_DATA = {
+            // Monday, Wednesday, Friday (Treatment Days)
+            treatment: {
+                title: "Tratamiento 🧪",
+                objective: "Control de brotes y renovación celular",
+                colorClass: "bg-rosewood-500",
+                bgLightClass: "bg-rosewood-50",
+                textLightClass: "text-rosewood-600",
+                AM: [
+                    { name: "Limpiador Bioderma Sébium", icon: "fa-soap", detail: "Limpieza suave para regular el sebo." },
+                    { name: "Tónico skin1004 tea trica", icon: "fa-droplet", detail: "Fórmula calmante y purificante." },
+                    { name: "Ampoule Skin1004 Tea-Trica", icon: "fa-flask", detail: "Concentrado directo contra imperfecciones." },
+                    { name: "Gel humectante skin1004 poremizing", icon: "fa-wind", detail: "Aplicar en capa fina. Controla los poros." },
+                    { name: "Protector Solar Skin1004 Hyalu-Cica", icon: "fa-sun", detail: "Protección hidratante sin dejar rastro grasoso." }
+                ],
+                PM: [
+                    { name: "Aceite Anua", icon: "fa-oil-well", detail: "Limpieza profunda de poros, emulsionar bien con agua." },
+                    { name: "Limpiador Bioderma Sébium", icon: "fa-soap", detail: "Segunda limpieza para remover cualquier residuo." },
+                    { name: "Differin Adapaleno", icon: "fa-sparkles", detail: "Tratamiento activo. Usar moderadamente." },
+                    { name: "Crema humectante ILLYON", icon: "fa-jar", detail: "Esperar un par de minutos a que se absorba el Differin." }
+                ]
+            },
+            // Tuesday, Thursday, Saturday (Recovery Days)
+            recovery: {
+                title: "Recuperación 🧪",
+                objective: "Hidratación profunda y calma de la barrera cutánea",
+                colorClass: "bg-sage-500",
+                bgLightClass: "bg-sage-50",
+                textLightClass: "text-sage-600",
+                AM: [
+                    { name: "Limpiador Bioderma Sébium", icon: "fa-soap", detail: "Limpieza dermo-purificante suave." },
+                    { name: "Tónico skin1004 tea trica", icon: "fa-droplet", detail: "Alivia e hidrata para empezar el día." },
+                    { name: "Ampoule Skin1004 Tea-Trica", icon: "fa-flask", detail: "Repara y desinflama progresivamente." },
+                    { name: "Protector Solar Skin1004 Hyalu-Cica", icon: "fa-sun", detail: "Defensa UV obligatoria para proteger el tratamiento anterior." }
+                ],
+                PM: [
+                    { name: "Aceite Anua + Limpiador Bioderma Sébium", icon: "fa-hand-wash", detail: "Doble limpieza suave para retirar sudor y polución." },
+                    { name: "Tónico Nineless Azelaic Acid", icon: "fa-droplet", detail: "Excelente para despigmentar e igualar tono suavemente." },
+                    { name: "Ampoule Skin1004 Tea-Trica", icon: "fa-flask", detail: "Para desinflamar rojeces o brotes activos." },
+                    { name: "Crema humectante Illyon", icon: "fa-jar", detail: "Aplicar una capa generosa para sellar la hidratación." }
+                ]
+            },
+            // Sunday (Reset Day)
+            reset: {
+                title: "Reset de Barrera 🌊",
+                objective: "Limpieza profunda y descanso total de activos fuertes",
+                colorClass: "bg-indigo-500",
+                bgLightClass: "bg-indigo-50",
+                textLightClass: "text-indigo-600",
+                AM: [
+                    // Same as recovery morning
+                    { name: "Limpiador Bioderma Sébium", icon: "fa-soap", detail: "Limpieza dermo-purificante suave." },
+                    { name: "Tónico skin1004 tea trica", icon: "fa-droplet", detail: "Alivia e hidrata para empezar el día." },
+                    { name: "Ampoule Skin1004 Tea-Trica", icon: "fa-flask", detail: "Repara y desinflama progresivamente." },
+                    { name: "Protector Solar Skin1004 Hyalu-Cica", icon: "fa-sun", detail: "Defensa UV obligatoria para proteger la barrera." }
+                ],
+                PM: [
+                    { name: "Doble limpieza profunda", icon: "fa-spa", detail: "Enfocarse pacientemente en puntos negros masajeando con el aceite." },
+                    { name: "Tónico skin1004 tea trica", icon: "fa-droplet", detail: "Equilibra el pH después del lavado." },
+                    { name: "Ampoule APLB Azelaic Acid Peptide", icon: "fa-flask-vial", detail: "Acción calmante intensiva y unificadora del tono." },
+                    { name: "Crema humectante Illyon", icon: "fa-jar", detail: "Restauración nocturna sin activos exfoliantes." }
+                ]
+            }
+        };
+
+        // Active routines variable loaded from LocalStorage or Fallback
+        let ROUTINE_DATA = {};
+
+        // Complete details of all unique products in the routine
+        const PRODUCT_CATALOG = [
+            { name: "Limpiador Bioderma Sébium", brand: "Bioderma", function: "Limpiador espumoso seborregulador", instruction: "Masajear sobre piel húmeda 1 minuto y enjuagar con agua tibia." },
+            { name: "Tónico skin1004 tea trica", brand: "Skin1004", function: "Tónico calmante para piel propensa a acné", instruction: "Aplicar suavemente con golpecitos usando las palmas de las manos." },
+            { name: "Ampoule Skin1004 Tea-Trica", brand: "Skin1004", function: "Ampolla concentrada purificante", instruction: "Colocar de 2 a 3 gotas en el rostro tras el tónico diario." },
+            { name: "Gel humectante skin1004 poremizing", brand: "Skin1004", function: "Gel hidratante que minimiza apariencia de poros", instruction: "Utilizar una capa muy fina en las mañanas de tratamiento." },
+            { name: "Protector Solar Skin1004 Hyalu-Cica", brand: "Skin1004", function: "Filtro solar hidratante y ligero SPF 50", instruction: "Aplicar generosamente (dos líneas en tus dedos) 15 minutos antes de salir." },
+            { name: "Aceite Anua", brand: "Anua", function: "Aceite limpiador disolvente de sebo", instruction: "Aplicar en piel seca, masajear en círculos, emulsionar con agua y enjuagar." },
+            { name: "Differin Adapaleno", brand: "Differin", function: "Retinoide potente para renovación y acné", instruction: "Usar de noche solo una pequeña gota del tamaño de un chícharo en piel completamente seca." },
+            { name: "Crema humectante ILLYON", brand: "ILLIYOON", function: "Crema de barrera hipoalergénica ceramidas", instruction: "Sellar la rutina con una capa protectora (generosa en noches de recuperación)." },
+            { name: "Tónico Nineless Azelaic Acid", brand: "Nineless", function: "Tónico aclarador y antiinflamatorio", instruction: "Ayuda a unificar manchas post-acné. Usar de noche." },
+            { name: "Ampoule APLB Azelaic Acid Peptide", brand: "APLB", function: "Ampolla calmante y reconstructora de péptidos", instruction: "Úsala el domingo de noche para revivir tu piel cansada de la semana." }
+        ];
+
+        // State Management variables
+        let currentDate = new Date(); // Represents selected/viewing date
+        let currentPeriod = "AM";    // Current selected period: AM or PM
+        let appState = {
+            progress: {}, // { "YYYY-MM-DD": { "AM-0": "completed", "PM-1": "suspended", ... } }
+            notes: {},    // { "YYYY-MM-DD": { mood: "perfect", text: "..." } }
+            streak: 0,
+            lastLoggedDate: ""
+        };
+
+        // Editor active selections state
+        let editorActiveDay = "treatment"; // treatment, recovery, reset
+        let editorActivePeriod = "AM";    // AM, PM
+        let editorLocalSteps = [];         // Temporally holds steps inside editing UI
+
+        // Format date helpers in Spanish
+        const daysSpanish = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const monthsSpanish = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        window.onload = function() {
+            // Load custom routines configuration if modified
+            const savedRoutines = localStorage.getItem("glowflow_custom_routines");
+            if (savedRoutines) {
+                try {
+                    ROUTINE_DATA = JSON.parse(savedRoutines);
+                } catch(e) {
+                    console.error("Error loading customized routine steps, fallback loaded.");
+                    ROUTINE_DATA = JSON.parse(JSON.stringify(INITIAL_ROUTINE_DATA));
+                }
+            } else {
+                ROUTINE_DATA = JSON.parse(JSON.stringify(INITIAL_ROUTINE_DATA));
+            }
+
+            // Load progress state from local storage
+            const savedState = localStorage.getItem("glowflow_state");
+            if (savedState) {
+                try {
+                    appState = JSON.parse(savedState);
+                } catch(e) {
+                    console.error("Error parsing stored skin diary state, restoring defaults.", e);
+                }
+            }
+            
+            // Auto initialize/calculate streak based on login patterns
+            calculateStreak();
+            
+            // Build calendar, catalog and render first views
+            buildWeeklyCalendar();
+            renderCatalog();
+            updateDailyView();
+        };
+
+        // Get date string key for localized indexing
+        function getDateKey(dateObj) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Return the routine plan type based on the Spanish weekday name
+        function getRoutineTypeForDay(dayIndex) {
+            // 0: Sunday, 1: Monday, 2: Tuesday, etc.
+            if (dayIndex === 1 || dayIndex === 3 || dayIndex === 5) {
+                return "treatment"; // Mon, Wed, Fri
+            } else if (dayIndex === 2 || dayIndex === 4 || dayIndex === 6) {
+                return "recovery";  // Tue, Thu, Sat
+            } else {
+                return "reset";     // Sun
+            }
+        }
+
+        // Build the current week day indicators (today +- 3 days or full week)
+        function buildWeeklyCalendar() {
+            const container = document.getElementById("week-days-container");
+            container.innerHTML = "";
+            
+            // Calculate start of current week (let's show today and surrounding 6 days, or current week Mon-Sun)
+            const todayIndex = new Date().getDay(); // 0-6
+            
+            // Render 7 days starting from Monday of the current week
+            const startOfWeek = new Date(currentDate);
+            // set to Monday
+            const distanceToMonday = (currentDate.getDay() + 6) % 7;
+            startOfWeek.setDate(currentDate.getDate() - distanceToMonday);
+
+            for (let i = 0; i < 7; i++) {
+                const dayIter = new Date(startOfWeek);
+                dayIter.setDate(startOfWeek.getDate() + i);
+                
+                const dayNum = dayIter.getDate();
+                const dayNameShort = daysSpanish[dayIter.getDay()].substring(0, 3);
+                const isSelected = getDateKey(dayIter) === getDateKey(currentDate);
+                const isToday = getDateKey(dayIter) === getDateKey(new Date());
+                const routinePlan = getRoutineTypeForDay(dayIter.getDay());
+                
+                // Color dots based on treatment (rosewood), recovery (sage), reset (indigo)
+                let badgeDotColor = "bg-rosewood-300";
+                if (routinePlan === "recovery") badgeDotColor = "bg-sage-400";
+                if (routinePlan === "reset") badgeDotColor = "bg-indigo-400";
+
+                const dayCard = document.createElement("button");
+                dayCard.onclick = () => selectCalendarDate(dayIter);
+                dayCard.className = `flex-1 flex flex-col items-center py-2 px-1 rounded-2xl transition-all duration-300 ${
+                    isSelected 
+                    ? "bg-sage-600 text-white shadow-md scale-105" 
+                    : isToday 
+                    ? "bg-sage-100/70 text-sage-800 border border-sage-300" 
+                    : "bg-stone-50 text-stone-600 hover:bg-stone-100 border border-stone-100"
+                }`;
+
+                dayCard.innerHTML = `
+                    <span class="text-[10px] uppercase font-bold tracking-wider opacity-80">${dayNameShort}</span>
+                    <span class="text-sm font-black my-1">${dayNum}</span>
+                    <span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : badgeDotColor}"></span>
+                `;
+                container.appendChild(dayCard);
+            }
+        }
+
+        // Date selection handle
+        function selectCalendarDate(dateObj) {
+            currentDate = new Date(dateObj);
+            buildWeeklyCalendar();
+            updateDailyView();
+        }
+
+        // Switch between AM (Morning) and PM (Night) routines
+        function switchRoutinePeriod(period) {
+            currentPeriod = period;
+            
+            const tabAm = document.getElementById("tab-am");
+            const tabPm = document.getElementById("tab-pm");
+            
+            if (period === "AM") {
+                tabAm.className = "flex-1 py-3 px-4 rounded-xl font-bold text-sm text-center flex items-center justify-center space-x-2 tab-transition bg-sage-500 text-white shadow-sm";
+                tabPm.className = "flex-1 py-3 px-4 rounded-xl font-bold text-sm text-center flex items-center justify-center space-x-2 tab-transition text-stone-500 hover:text-stone-800";
+            } else {
+                tabPm.className = "flex-1 py-3 px-4 rounded-xl font-bold text-sm text-center flex items-center justify-center space-x-2 tab-transition bg-sage-500 text-white shadow-sm";
+                tabAm.className = "flex-1 py-3 px-4 rounded-xl font-bold text-sm text-center flex items-center justify-center space-x-2 tab-transition text-stone-500 hover:text-stone-800";
+            }
+            
+            updateDailyView();
+        }
+
+        // Primary render system that syncs UI with AppState & Day rules
+        function updateDailyView() {
+            const dateKey = getDateKey(currentDate);
+            const dayOfWeek = currentDate.getDay(); // 0 to 6
+            const routineType = getRoutineTypeForDay(dayOfWeek);
+            const routine = ROUTINE_DATA[routineType];
+
+            // Render top labels
+            const dayName = daysSpanish[dayOfWeek];
+            const monthName = monthsSpanish[currentDate.getMonth()];
+            document.getElementById("selected-date-title").innerText = `${dayName}, ${currentDate.getDate()} ${monthName}`;
+            
+            const badge = document.getElementById("day-type-badge");
+            badge.innerText = routine.title;
+            badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${routine.bgLightClass} ${routine.textLightClass} border border-current/20`;
+
+            // Setup current active list (AM or PM)
+            const stepsList = routine[currentPeriod];
+            const stepsContainer = document.getElementById("steps-container");
+            stepsContainer.innerHTML = "";
+
+            // Check how many items exist and retrieve records for progress calculations
+            const savedDayProgress = appState.progress[dateKey] || {};
+
+            stepsList.forEach((step, index) => {
+                const stepKey = `${currentPeriod}-${index}`;
+                const status = savedDayProgress[stepKey] || "pending"; // 'pending', 'completed', 'suspended'
+
+                const card = document.createElement("div");
+                card.className = `p-4 rounded-2xl bg-white border transition-all duration-300 ${
+                    status === 'completed' 
+                    ? 'border-emerald-200 shadow-sm bg-gradient-to-r from-emerald-50/20 to-white' 
+                    : status === 'suspended' 
+                    ? 'border-amber-200 shadow-sm bg-gradient-to-r from-amber-50/20 to-white' 
+                    : 'border-stone-100 hover:border-stone-200 shadow-sm'
+                }`;
+
+                // Status layout variations
+                let statusBadge = `<span class="bg-stone-100 text-stone-500 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Pendiente</span>`;
+                if (status === 'completed') {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Realizado</span>`;
+                } else if (status === 'suspended') {
+                    statusBadge = `<span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-circle-pause"></i> Suspendido</span>`;
+                }
+
+                // Beautiful SVGs or icons based on the step properties
+                const visualIcon = getStepIconHtml(step.icon, status);
+
+                card.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="mt-0.5">
+                            ${visualIcon}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                <h4 class="font-bold text-sm text-stone-800 leading-snug">${step.name}</h4>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-xs text-stone-400 mt-1">${step.detail}</p>
+                            
+                            <!-- Action button array -->
+                            <div class="flex items-center space-x-2 mt-3.5 pt-3 border-t border-stone-100/80">
+                                <button onclick="setStepStatus('${stepKey}', 'completed')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all ${
+                                    status === 'completed' 
+                                    ? 'bg-emerald-600 text-white' 
+                                    : 'bg-stone-50 text-emerald-600 border border-stone-200/60 hover:bg-emerald-50'
+                                }">
+                                    <i class="fa-solid fa-check text-[10px]"></i>
+                                    <span>Realizada</span>
+                                </button>
+                                
+                                <button onclick="setStepStatus('${stepKey}', 'suspended')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all ${
+                                    status === 'suspended' 
+                                    ? 'bg-amber-500 text-white' 
+                                    : 'bg-stone-50 text-amber-600 border border-stone-200/60 hover:bg-amber-50'
+                                }">
+                                    <i class="fa-solid fa-ban text-[10px]"></i>
+                                    <span>Suspendida</span>
+                                </button>
+
+                                ${status !== 'pending' ? `
+                                <button onclick="setStepStatus('${stepKey}', 'pending')" class="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 bg-stone-50 border border-stone-200/60 hover:bg-stone-100 transition-all" title="Restablecer">
+                                    <i class="fa-solid fa-rotate-left text-xs"></i>
+                                </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                stepsContainer.appendChild(card);
+            });
+
+            // Update today progress and notes text
+            updateProgressStats(routine);
+            loadDailyNotesToInputs();
+        }
+
+        // Helper to output styled skincare action icons
+        function getStepIconHtml(iconName, status) {
+            let colorMap = "bg-stone-50 text-stone-400 border border-stone-200";
+            if (status === 'completed') colorMap = "bg-emerald-100 text-emerald-600 border border-emerald-200 shadow-sm";
+            if (status === 'suspended') colorMap = "bg-amber-100 text-amber-600 border border-amber-200 shadow-sm";
+
+            return `
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${colorMap}">
+                    <i class="fa-solid ${iconName} text-base"></i>
+                </div>
+            `;
+        }
+
+        // Calculate percentages and visual circles for statistics dashboard
+        function updateProgressStats(routinePlan) {
+            const dateKey = getDateKey(currentDate);
+            const savedDayProgress = appState.progress[dateKey] || {};
+            
+            const totalSteps = routinePlan.AM.length + routinePlan.PM.length;
+            
+            let completedCount = 0;
+            let suspendedCount = 0;
+            let pendingCount = 0;
+
+            // AM loop
+            routinePlan.AM.forEach((_, i) => {
+                const status = savedDayProgress[`AM-${i}`] || 'pending';
+                if (status === 'completed') completedCount++;
+                else if (status === 'suspended') suspendedCount++;
+                else pendingCount++;
+            });
+
+            // PM loop
+            routinePlan.PM.forEach((_, i) => {
+                const status = savedDayProgress[`PM-${i}`] || 'pending';
+                if (status === 'completed') completedCount++;
+                else if (status === 'suspended') suspendedCount++;
+                else pendingCount++;
+            });
+
+            // Update Text Nodes
+            document.getElementById("stats-pending").innerText = pendingCount;
+            document.getElementById("stats-completed").innerText = completedCount;
+            document.getElementById("stats-skipped").innerText = suspendedCount;
+
+            // Calculate percentage based on (Completed + Suspended) actions out of total
+            const actedUpon = completedCount + suspendedCount;
+            const percentage = totalSteps > 0 ? Math.round((actedUpon / totalSteps) * 100) : 0;
+            
+            document.getElementById("progress-percentage").innerText = `${percentage}%`;
+
+            // Adjust the SVG radial stroke bar (dasharray circumference is 175)
+            const circleBar = document.getElementById("progress-circle-bar");
+            const offset = 175 - (175 * percentage) / 100;
+            circleBar.setAttribute("stroke-dashoffset", offset);
+        }
+
+        // Modify step values in state
+        function setStepStatus(stepKey, newStatus) {
+            const dateKey = getDateKey(currentDate);
+            
+            if (!appState.progress[dateKey]) {
+                appState.progress[dateKey] = {};
+            }
+
+            // If it was already in this status, toggling back to pending could be triggered but buttons are safe
+            appState.progress[dateKey][stepKey] = newStatus;
+
+            // Save state immediately
+            saveStateToStorage();
+            updateDailyView();
+            
+            // Re-calc streak on complete events
+            calculateStreak();
+
+            // Nice gentle Toast
+            if (newStatus === 'completed') {
+                showToast("Paso realizado con éxito. ¡Buen trabajo por tu piel! ✨", "bg-emerald-600", "fa-circle-check");
+            } else if (newStatus === 'suspended') {
+                showToast("Paso suspendido para hoy. Escuchar a tu piel es vital. 🛡️", "bg-amber-500", "fa-circle-notch");
+            } else {
+                showToast("Paso restablecido a pendiente.", "bg-stone-600", "fa-clock");
+            }
+        }
+
+        // Load notes for current selected calendar date
+        function loadDailyNotesToInputs() {
+            const dateKey = getDateKey(currentDate);
+            const dailyData = appState.notes[dateKey] || { mood: "", text: "" };
+            
+            // Reset mood selected styles
+            document.querySelectorAll(".mood-btn").forEach(btn => {
+                btn.classList.remove("bg-sage-100", "border-sage-400", "scale-105", "shadow-sm");
+                btn.classList.add("border-stone-100");
+            });
+
+            // Highlight chosen mood if any
+            if (dailyData.mood) {
+                const moodButtons = document.querySelectorAll(".mood-btn");
+                const moodMap = { perfect: 0, dry: 1, sensitive: 2, breakout: 3 };
+                const btnIndex = moodMap[dailyData.mood];
+                if (btnIndex !== undefined && moodButtons[btnIndex]) {
+                    moodButtons[btnIndex].classList.add("bg-sage-100", "border-sage-400", "scale-105", "shadow-sm");
+                    moodButtons[btnIndex].classList.remove("border-stone-100");
+                }
+            }
+
+            // Load text area
+            document.getElementById("skin-note-input").value = dailyData.text || "";
+        }
+
+        // Set skin state mood icon
+        function setSkinMood(mood) {
+            const dateKey = getDateKey(currentDate);
+            if (!appState.notes[dateKey]) {
+                appState.notes[dateKey] = { mood: "", text: "" };
+            }
+            appState.notes[dateKey].mood = mood;
+            
+            saveStateToStorage();
+            loadDailyNotesToInputs();
+            showToast(`Estado de piel registrado: ${mood.toUpperCase()}`, "bg-sage-600", "fa-face-smile");
+        }
+
+        // Save note text input content
+        function saveDailyNote() {
+            const dateKey = getDateKey(currentDate);
+            const textValue = document.getElementById("skin-note-input").value.trim();
+
+            if (!appState.notes[dateKey]) {
+                appState.notes[dateKey] = { mood: "", text: "" };
+            }
+            appState.notes[dateKey].text = textValue;
+
+            saveStateToStorage();
+            showToast("Notas guardadas para este día.", "bg-stone-700", "fa-floppy-disk");
+        }
+
+        // Calculate consecutive active days with skincare entries
+        function calculateStreak() {
+            // Check consecutive days backward from today
+            let streak = 0;
+            let checkDate = new Date(); // Start evaluating from today
+            
+            // Allow checking for up to 30 days backward
+            for (let i = 0; i < 30; i++) {
+                const dateKey = getDateKey(checkDate);
+                const dayProgress = appState.progress[dateKey];
+                
+                if (dayProgress) {
+                    // Check if at least one step was completed or suspended (action taken)
+                    const actions = Object.values(dayProgress);
+                    const hasAction = actions.some(status => status === 'completed' || status === 'suspended');
+                    
+                    if (hasAction) {
+                        streak++;
+                    } else {
+                        // If it's today and empty, let's look at yesterday first before breaking streak completely
+                        if (i === 0) {
+                            // bypass breaking if today is simply starting empty
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    if (i > 0) break; // Break streak if no actions recorded on previous day
+                }
+                
+                // Roll back one day
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+
+            appState.streak = streak;
+            document.getElementById("streak-counter").innerText = `${streak} ${streak === 1 ? 'día' : 'días'}`;
+        }
+
+        // Save appState globally to localStorage
+        function saveStateToStorage() {
+            localStorage.setItem("glowflow_state", JSON.stringify(appState));
+        }
+
+        /* ========================================================
+           VISUAL ROUTINE EDITOR CONTROL METHODS
+           ======================================================== */
+        function openEditorModal() {
+            const modal = document.getElementById("editor-modal");
+            const container = document.getElementById("editor-modal-container");
+            
+            // Initialize local editor values based on active selected view
+            const dayOfWeek = currentDate.getDay(); 
+            editorActiveDay = getRoutineTypeForDay(dayOfWeek);
+            editorActivePeriod = currentPeriod;
+
+            // Load values to editor lists
+            updateEditorTogglesUI();
+            loadEditorStepsFromData();
+
+            // Open animations
+            modal.classList.remove("opacity-0", "pointer-events-none");
+            modal.classList.add("opacity-100");
+            container.classList.remove("translate-y-10");
+            container.classList.add("translate-y-0");
+        }
+
+        function closeEditorModal() {
+            const modal = document.getElementById("editor-modal");
+            const container = document.getElementById("editor-modal-container");
+
+            // Close animations
+            modal.classList.add("opacity-0", "pointer-events-none");
+            modal.classList.remove("opacity-100");
+            container.classList.add("translate-y-10");
+            container.classList.remove("translate-y-0");
+        }
+
+        function setEditorDayType(dayType) {
+            editorActiveDay = dayType;
+            updateEditorTogglesUI();
+            loadEditorStepsFromData();
+        }
+
+        function setEditorPeriod(period) {
+            editorActivePeriod = period;
+            updateEditorTogglesUI();
+            loadEditorStepsFromData();
+        }
+
+        // Visually update current toggles inside the modal
+        function updateEditorTogglesUI() {
+            const days = ["treatment", "recovery", "reset"];
+            days.forEach(d => {
+                const btn = document.getElementById(`edit-day-${d}`);
+                if (d === editorActiveDay) {
+                    btn.className = "py-1.5 text-xs font-bold rounded-lg text-center transition-all bg-sage-500 text-white shadow-sm";
+                } else {
+                    btn.className = "py-1.5 text-xs font-bold rounded-lg text-center text-stone-600 hover:bg-stone-100 transition-all";
+                }
+            });
+
+            const btnAm = document.getElementById("edit-period-am");
+            const btnPm = document.getElementById("edit-period-pm");
+
+            if (editorActivePeriod === "AM") {
+                btnAm.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-center transition-all bg-stone-800 text-white shadow-sm flex items-center justify-center gap-1";
+                btnPm.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-center text-stone-600 hover:bg-stone-100 transition-all flex items-center justify-center gap-1";
+            } else {
+                btnPm.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-center transition-all bg-stone-800 text-white shadow-sm flex items-center justify-center gap-1";
+                btnAm.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-center text-stone-600 hover:bg-stone-100 transition-all flex items-center justify-center gap-1";
+            }
+        }
+
+        // Read active routine configuration and fill editable fields in modal
+        function loadEditorStepsFromData() {
+            const listContainer = document.getElementById("editor-steps-list");
+            listContainer.innerHTML = "";
+
+            // Clone to avoid direct unwanted edits in production list before user clicks "Save"
+            editorLocalSteps = JSON.parse(JSON.stringify(ROUTINE_DATA[editorActiveDay][editorActivePeriod]));
+
+            renderEditorSteps();
+        }
+
+        // Render current local list of steps being customized
+        function renderEditorSteps() {
+            const listContainer = document.getElementById("editor-steps-list");
+            listContainer.innerHTML = "";
+
+            if (editorLocalSteps.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-8 px-4 border border-dashed border-stone-200 rounded-2xl">
+                        <p class="text-xs text-stone-400 font-medium">No hay pasos creados en este horario.</p>
+                        <p class="text-[10px] text-stone-400 mt-1">Presiona "Añadir un Nuevo Paso" abajo.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            editorLocalSteps.forEach((step, index) => {
+                const stepForm = document.createElement("div");
+                stepForm.className = "bg-stone-50 border border-stone-200/60 rounded-2xl p-3 space-y-2 relative transition-all";
+                
+                // Icon select maps for skincare products
+                const standardIcons = ["fa-soap", "fa-droplet", "fa-flask", "fa-wind", "fa-sun", "fa-oil-well", "fa-sparkles", "fa-jar", "fa-flask-vial", "fa-hands-wash"];
+                let iconOptionsHtml = "";
+                standardIcons.forEach(ic => {
+                    const isSelected = step.icon === ic;
+                    iconOptionsHtml += `
+                        <option value="${ic}" ${isSelected ? 'selected' : ''}>${ic.replace('fa-', '')}</option>
+                    `;
+                });
+
+                stepForm.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-stone-400">PASO ${index + 1}</span>
+                        <button onclick="removeEditorStep(${index})" class="text-red-500 hover:text-red-700 p-1 text-xs" title="Eliminar paso">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="grid grid-cols-4 gap-1.5">
+                            <input type="text" value="${step.name}" oninput="updateStepValue(${index}, 'name', this.value)" placeholder="Nombre del producto" class="col-span-3 text-xs p-2 rounded-lg border border-stone-200 focus:outline-none focus:ring-1 focus:ring-sage-500 bg-white">
+                            <select onchange="updateStepValue(${index}, 'icon', this.value)" class="text-[10px] p-2 rounded-lg border border-stone-200 bg-white text-stone-600">
+                                ${iconOptionsHtml}
+                            </select>
+                        </div>
+                        <input type="text" value="${step.detail}" oninput="updateStepValue(${index}, 'detail', this.value)" placeholder="Consejo o modo de uso (ej: Capa fina)" class="w-full text-xs p-2 rounded-lg border border-stone-200 focus:outline-none focus:ring-1 focus:ring-sage-500 bg-white">
+                    </div>
+                `;
+                listContainer.appendChild(stepForm);
+            });
+        }
+
+        // Live input updates to the temporary array
+        function updateStepValue(index, key, value) {
+            if (editorLocalSteps[index]) {
+                editorLocalSteps[index][key] = value;
+            }
+        }
+
+        // Remove single step index from temporary array
+        function removeEditorStep(index) {
+            editorLocalSteps.splice(index, 1);
+            renderEditorSteps();
+        }
+
+        // Add blank step templates
+        function addNewEditorStep() {
+            editorLocalSteps.push({
+                name: "Nuevo Producto",
+                icon: "fa-droplet",
+                detail: "Detalle opcional de aplicación."
+            });
+            renderEditorSteps();
+            
+            // Scroll editor down to show the newly added field
+            setTimeout(() => {
+                const listContainer = document.getElementById("editor-steps-list");
+                listContainer.scrollTop = listContainer.scrollHeight;
+            }, 50);
+        }
+
+        // Save active edits, write changes to storage, and reload main application layout
+        function saveAndApplyCustomRoutines() {
+            // Basic validation
+            for (let i = 0; i < editorLocalSteps.length; i++) {
+                if (!editorLocalSteps[i].name.trim()) {
+                    showToast("Por favor asigne un nombre a todos los pasos activos.", "bg-rosewood-500", "fa-triangle-exclamation");
+                    return;
+                }
+            }
+
+            // Apply local working edits to global ROUTINE_DATA
+            ROUTINE_DATA[editorActiveDay][editorActivePeriod] = JSON.parse(JSON.stringify(editorLocalSteps));
+
+            // Persist to local storage
+            localStorage.setItem("glowflow_custom_routines", JSON.stringify(ROUTINE_DATA));
+
+            // Close dialog & update active layouts
+            closeEditorModal();
+            updateDailyView();
+            showToast("¡Rutina actualizada correctamente y aplicada con éxito! ✨", "bg-emerald-600", "fa-circle-check");
+        }
+
+        // Reset custom values back to default formula parameters
+        function resetRoutinesToDefault() {
+            ROUTINE_DATA = JSON.parse(JSON.stringify(INITIAL_ROUTINE_DATA));
+            localStorage.removeItem("glowflow_custom_routines");
+            
+            // Reload editing screen
+            loadEditorStepsFromData();
+            updateDailyView();
+            
+            showToast("Se han restablecido los pasos originales.", "bg-stone-700", "fa-trash-can");
+        }
+
+        // Modern toast notification drawer
+        function showToast(message, bgColorClass, fontAwesomeIcon) {
+            const toast = document.getElementById("toast-message");
+            const toastIcon = document.getElementById("toast-icon");
+            const toastText = document.getElementById("toast-text");
+
+            toastText.innerText = message;
+            toastIcon.className = `w-6 h-6 rounded-full flex items-center justify-center ${bgColorClass} text-white text-xs`;
+            toastIcon.innerHTML = `<i class="fa-solid ${fontAwesomeIcon}"></i>`;
+
+            // Reset and fade-in classes
+            toast.classList.remove("opacity-0", "pointer-events-none");
+            toast.classList.add("opacity-100");
+
+            // Auto dismiss toast after 3 seconds
+            clearTimeout(toast.toastTimeout);
+            toast.toastTimeout = setTimeout(() => {
+                toast.classList.add("opacity-0", "pointer-events-none");
+                toast.classList.remove("opacity-100");
+            }, 3000);
+        }
+
+        // Render dictionary list details for each unique active product in database
+        function renderCatalog() {
+            const container = document.getElementById("catalog-container");
+            container.innerHTML = "";
+
+            PRODUCT_CATALOG.forEach((prod) => {
+                const item = document.createElement("div");
+                item.className = "bg-white rounded-2xl p-4 shadow-sm border border-stone-200/50 hover:shadow-md transition-all";
+                item.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-extrabold uppercase tracking-widest text-sage-600">${prod.brand}</span>
+                        <span class="text-[10px] bg-stone-100 text-stone-500 font-bold px-2 py-0.5 rounded-full">${prod.function}</span>
+                    </div>
+                    <h4 class="font-extrabold text-sm text-stone-800 mt-1">${prod.name}</h4>
+                    <p class="text-xs text-stone-500 mt-2 bg-stone-50 p-2.5 rounded-xl border border-dashed border-stone-200"><strong class="text-stone-700">Modo de uso:</strong> ${prod.instruction}</p>
+                `;
+                container.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+            // Reset and fade-in classes
+            toast.classList.remove("opacity-0", "pointer-events-none");
+            toast.classList.add("opacity-100");
+
+            // Auto dismiss toast after 3 seconds
+            clearTimeout(toast.toastTimeout);
+            toast.toastTimeout = setTimeout(() => {
+                toast.classList.add("opacity-0", "pointer-events-none");
+                toast.classList.remove("opacity-100");
+            }, 3000);
+        }
+
+        // Render dictionary list details for each unique active product in database
+        function renderCatalog() {
+            const container = document.getElementById("catalog-container");
+            container.innerHTML = "";
+
+            PRODUCT_CATALOG.forEach((prod) => {
+                const item = document.createElement("div");
+                item.className = "bg-white rounded-2xl p-4 shadow-sm border border-stone-200/50 hover:shadow-md transition-all";
+                item.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-extrabold uppercase tracking-widest text-sage-600">${prod.brand}</span>
+                        <span class="text-[10px] bg-stone-100 text-stone-500 font-bold px-2 py-0.5 rounded-full">${prod.function}</span>
+                    </div>
+                    <h4 class="font-extrabold text-sm text-stone-800 mt-1">${prod.name}</h4>
+                    <p class="text-xs text-stone-500 mt-2 bg-stone-50 p-2.5 rounded-xl border border-dashed border-stone-200"><strong class="text-stone-700">Modo de uso:</strong> ${prod.instruction}</p>
+                `;
+                container.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
